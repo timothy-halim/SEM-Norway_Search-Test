@@ -1,0 +1,71 @@
+<div style="max-width: 650px; margin: 0 auto; font-family: system-ui, -apple-system, sans-serif;">
+  <!-- Search Bar UI -->
+  <div style="display: flex; gap: 8px; margin-bottom: 24px;">
+    <input type="text" id="ytQuery" placeholder="Søk i video tittel og beskrivelse..." 
+           style="flex: 1; padding: 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 15px;">
+    <button id="ytSearchBtn"
+            style="padding: 12px 20px; background-color: #0066cc; color: #fff; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;">
+      Søk
+    </button>
+  </div>
+
+  <!-- Results Container -->
+  <div id="ytResults" style="display: flex; flex-direction: column; gap: 16px;"></div>
+</div>
+
+<script>
+(function() {
+  const API_KEY = 'YOUR_API_KEY';
+  const CHANNEL_ID = 'UCjgNt7-F3PmXD_K1x5E058g';
+
+  async function searchChannelOnly() {
+    const query = document.getElementById('ytQuery').value.trim();
+    const resultsContainer = document.getElementById('ytResults');
+    
+    if (!query) return;
+    resultsContainer.innerHTML = '<p style="color: #666;">Søker i videotitler og beskrivelser...</p>';
+
+    const endpoint = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${CHANNEL_ID}&q=${encodeURIComponent(query)}&type=video&maxResults=8&key=${API_KEY}`;
+
+    try {
+      const res = await fetch(endpoint);
+      const data = await res.json();
+      
+      resultsContainer.innerHTML = '';
+      
+      if (!data.items || data.items.length === 0) {
+        resultsContainer.innerHTML = '<p>Ingen treff i videotitler eller beskrivelser.</p>';
+        return;
+      }
+
+      data.items.forEach(item => {
+        const videoId = item.id.videoId;
+        const title = item.snippet.title;
+        const description = item.snippet.description;
+
+        const card = `
+          <div style="display: flex; gap: 16px; border: 1px solid #e0e0e0; padding: 12px; border-radius: 8px; background-color: #fff;">
+            <iframe width="200" height="115" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen style="border-radius: 4px; flex-shrink: 0;"></iframe>
+            <div>
+              <h4 style="margin: 0 0 6px 0; font-size: 16px;">${title}</h4>
+              <p style="margin: 0; font-size: 13px; color: #555; line-height: 1.4;">${description}</p>
+            </div>
+          </div>
+        `;
+        resultsContainer.innerHTML += card;
+      });
+    } catch (err) {
+      console.error(err);
+      resultsContainer.innerHTML = '<p style="color: red;">Kunne ikke utføre søket. Sjekk at API-nøkkelen er aktiv og har tilgang.</p>';
+    }
+  }
+
+  // Event listener attachment once DOM loads
+  document.addEventListener("DOMContentLoaded", function() {
+    const btn = document.getElementById('ytSearchBtn');
+    if (btn) {
+      btn.addEventListener('click', searchChannelOnly);
+    }
+  });
+})();
+</script>
